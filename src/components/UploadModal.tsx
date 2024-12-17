@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -15,18 +14,7 @@ interface UploadModalProps {
   onUpload: (file: File, imageData: string) => void;
 }
 
-const UploadModal: React.FC<UploadModalProps> = ({
-  isOpen,
-  onClose,
-  onUpload,
-}) => {
-  // Clear selected image and file when modal is closed
-  useEffect(() => {
-    if (!isOpen) {
-      // Any cleanup if needed
-    }
-  }, [isOpen]);
-
+const UploadModal = ({ isOpen, onClose, onUpload }: UploadModalProps) => {
   const handleImageAccepted = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {

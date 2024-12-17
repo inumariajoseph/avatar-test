@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef} from "react";
 import {
   Box,
   Heading,
@@ -18,7 +18,7 @@ import {
   SliderTrack,
   SliderFilledTrack,
   SliderThumb,
-  useToast,
+
 } from "@chakra-ui/react";
 import AvatarEditor from "react-avatar-editor";
 import UploadModal from "./UploadModal";
@@ -104,6 +104,13 @@ const ReactAvatarEditor = ({ onBack }: ReactAvatarEditorProps) => {
     setPosition({ x: 0.5, y: 0.5 });
   };
 
+  const handleCancel = () => {
+    setUploadedImage(null);
+    setCroppedImage(null);
+    setScale(1);
+    setPosition({ x: 0.5, y: 0.5 });
+  };
+
   return (
     <Box minHeight="100vh" padding={4}>
       <VStack
@@ -176,6 +183,9 @@ const ReactAvatarEditor = ({ onBack }: ReactAvatarEditorProps) => {
               </Button>
               <Button onClick={handleSave} colorScheme="green">
                 Save
+              </Button>
+              <Button onClick={handleCancel} colorScheme="red">
+                Cancel
               </Button>
             </HStack>
           </>

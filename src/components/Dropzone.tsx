@@ -5,9 +5,9 @@ interface DropzoneProps {
   onImageAccepted: (file: File) => void;
 }
 
-const Dropzone: React.FC<DropzoneProps> = ({ onImageAccepted }) => {
-  const [isDragActive, setIsDragActive] = useState(false);
+const Dropzone = ({ onImageAccepted }: DropzoneProps) => {
   const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const validateFile = (file: File): boolean => {
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -19,40 +19,38 @@ const Dropzone: React.FC<DropzoneProps> = ({ onImageAccepted }) => {
     return true;
   };
 
-  const onDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    setIsDragActive(true);
-  }, []);
-
-  const onDragLeave = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    setIsDragActive(false);
-  }, []);
-
-  const onDrop = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    setIsDragActive(false);
-    if (event.dataTransfer.files && event.dataTransfer.files[0]) {
-      const file = event.dataTransfer.files[0];
-      if (validateFile(file)) {
-        onImageAccepted(file);
-      }
+  const handleFile = useCallback((file: File) => {
+    if (validateFile(file)) {
+      onImageAccepted(file);
     }
   }, [onImageAccepted]);
+
+  const onDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    const file = event.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
 
   const onFileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      if (validateFile(file)) {
-        onImageAccepted(file);
-      }
-    }
-  }, [onImageAccepted]);
+    const file = event.target.files?.[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
+  const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const onDragLeave = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  }, []);
 
   return (
     <Box
       border="2px dashed"
-      borderColor={isDragActive ? "blue.500" : "gray.300"}
+      borderColor={isDragging ? "blue.500" : "gray.300"}
       borderRadius="md"
       p={6}
       textAlign="center"
@@ -73,11 +71,7 @@ const Dropzone: React.FC<DropzoneProps> = ({ onImageAccepted }) => {
       />
       <VStack spacing={2}>
         <Text fontSize="3xl">🖼️</Text>
-        <Text>
-          {isDragActive
-            ? "Drop the image here"
-            : "Drop your image here or click to upload"}
-        </Text>
+        <Text>Drop your image here or click to upload</Text>
         <Text fontSize="sm" color="gray.500">
           Supported formats: JPEG, PNG, GIF, WebP
         </Text>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   Box,
   Button,
@@ -18,44 +18,37 @@ interface AvatarTestProps {
   onClose: () => void;
 }
 
-const AvatarTest = ({ onClose }: AvatarTestProps): JSX.Element => {
-  const [selectedComponent, setSelectedComponent] = useState<string | null>(
-    null
-  );
+const COMPONENTS = {
+  "react-zoom-pan-pinch": ReactZoomPanPinch,
+  "react-medium-image-zoom": ReactMediumImageZoom,
+  "react-avatar-editor": ReactAvatarEditor,
+  "react-cropper": ReactCropper,
+} as const;
 
-  const handleComponentSelect = (component: string) => {
+type ComponentName = keyof typeof COMPONENTS;
+
+const AvatarTest = ({ onClose }: AvatarTestProps) => {
+  const [selectedComponent, setSelectedComponent] = useState<ComponentName | null>(null);
+
+  const handleComponentSelect = useCallback((component: ComponentName) => {
     setSelectedComponent(component);
-  };
+  }, []);
 
-  const handleBackToList = () => {
+  const handleBackToList = useCallback(() => {
     setSelectedComponent(null);
-  };
+  }, []);
 
-  const renderSelectedComponent = () => {
-    switch (selectedComponent) {
-      case "react-zoom-pan-pinch":
-        return <ReactZoomPanPinch onBack={handleBackToList} />;
-      case "react-medium-image-zoom":
-        return <ReactMediumImageZoom onBack={handleBackToList} />;
-      case "react-avatar-editor":
-        return <ReactAvatarEditor onBack={handleBackToList} />;
-      case "react-cropper":
-        return <ReactCropper onBack={handleBackToList} />;
-      default:
-        return null;
-    }
-  };
+  const SelectedComponent = useMemo(() => {
+    return selectedComponent ? COMPONENTS[selectedComponent] : null;
+  }, [selectedComponent]);
+
+  const componentList = useMemo(() => Object.keys(COMPONENTS) as ComponentName[], []);
 
   return (
     <Box position="relative" width="100%" height="100vh">
-      <Flex
-        width="100%"
-        height="100%"
-        flexDirection="column"
-        alignItems="center"
-      >
-        {selectedComponent ? (
-          renderSelectedComponent()
+      <Flex width="100%" height="100%" flexDirection="column" alignItems="center">
+        {SelectedComponent ? (
+          <SelectedComponent onBack={handleBackToList} />
         ) : (
           <VStack spacing={6} align="center" padding={8} maxWidth="600px">
             <Heading as="h2" size="lg" textAlign="center">
@@ -65,12 +58,7 @@ const AvatarTest = ({ onClose }: AvatarTestProps): JSX.Element => {
               Select a library to test:
             </Text>
             <UnorderedList spacing={2}>
-              {[
-                "react-zoom-pan-pinch",
-                "react-medium-image-zoom",
-                "react-avatar-editor",
-                "react-cropper",
-              ].map((name) => (
+              {componentList.map((name) => (
                 <ListItem
                   key={name}
                   cursor="pointer"

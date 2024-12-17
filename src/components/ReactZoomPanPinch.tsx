@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -7,7 +7,6 @@ import {
   useDisclosure,
   Heading,
   Link,
-  useToast,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -19,15 +18,34 @@ import {
 import {
   TransformWrapper,
   TransformComponent,
-  ReactZoomPanPinchRef,
   useControls,
-  useTransformComponent,
 } from "react-zoom-pan-pinch";
 import UploadModal from "./UploadModal";
 
 interface ReactZoomPanPinchProps {
   onBack: () => void;
 }
+
+const Controls = () => {
+  const { zoomIn, zoomOut, resetTransform } = useControls();
+  return (
+    <Flex
+      justifyContent="center"
+      width="100%"
+      position="absolute"
+      bottom="0"
+      padding="2"
+    >
+      <Button onClick={() => zoomIn()} mr={2}>
+        +
+      </Button>
+      <Button onClick={() => zoomOut()} mr={2}>
+        -
+      </Button>
+      <Button onClick={() => resetTransform()}>Reset</Button>
+    </Flex>
+  );
+};
 
 const ReactZoomPanPinch = ({ onBack }: ReactZoomPanPinchProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -39,68 +57,43 @@ const ReactZoomPanPinch = ({ onBack }: ReactZoomPanPinchProps) => {
     onClose: onPreviewClose,
   } = useDisclosure();
 
-  const handleUpload = (file: File, imageData: string) => {
-    setSelectedImage(imageData);
-    onClose();
-  };
-
-  const Controls = () => {
-    const { zoomIn, zoomOut, resetTransform } = useControls();
-    return (
-      <Flex
-        justifyContent="center"
-        width="100%"
-        position="absolute"
-        bottom="0"
-        padding="2"
-      >
-        <Button onClick={() => zoomIn()} mr={2}>
-          +
-        </Button>
-        <Button onClick={() => zoomOut()} mr={2}>
-          -
-        </Button>
-        <Button onClick={() => resetTransform()}>Reset</Button>
-      </Flex>
-    );
-  };
-
   const [transformState, setTransformState] = useState({
     scale: 1,
     positionX: 0,
     positionY: 0,
   });
 
-  const handleTransform = (e: any) => {
+  const handleUpload = (file: File, imageData: string) => {
+    setSelectedImage(imageData);
+    onClose();
+  };
+
+  const handleTransform = (e: { state: typeof transformState }) => {
     setTransformState({
       scale: e.state.scale,
       positionX: e.state.positionX,
       positionY: e.state.positionY,
     });
   };
+
   const handlePreview = () => {
     if (selectedImage) {
       const { scale, positionX, positionY } = transformState;
 
-      // Create a canvas to draw the preview
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // Set canvas size to the visible area
-      canvas.width = 600; // match the width of your TransformWrapper
-      canvas.height = 400; // match the height of your TransformWrapper
+      canvas.width = 600;
+      canvas.height = 400;
 
-      // Create an image object
       const img = document.createElement("img");
       img.onload = () => {
-        // Calculate the visible area
         const visibleWidth = canvas.width / scale;
         const visibleHeight = canvas.height / scale;
         const sourceX = -positionX / scale + (img.width - visibleWidth) / 2;
         const sourceY = -positionY / scale + (img.height - visibleHeight) / 2;
 
-        // Draw the visible part of the image on the canvas
         ctx.drawImage(
           img,
           sourceX,
@@ -113,10 +106,9 @@ const ReactZoomPanPinch = ({ onBack }: ReactZoomPanPinchProps) => {
           canvas.height
         );
 
-        // Convert canvas to data URL and set as preview image
         const previewDataUrl = canvas.toDataURL("image/png");
         setPreviewImage(previewDataUrl);
-        onPreviewOpen(); // Open the preview modal
+        onPreviewOpen();
       };
       img.src = selectedImage;
     }
@@ -126,65 +118,72 @@ const ReactZoomPanPinch = ({ onBack }: ReactZoomPanPinchProps) => {
     if (selectedImage) {
       try {
         const imageData = await prepareImageData();
-        // Here, you would typically send imageData to your API
-        console.log('Image data prepared for API:', imageData);
-        // Add your API call here, for example:
-        // await sendImageToAPI(imageData);
+        console.log("Image data prepared for API:", imageData);  
       } catch (error) {
-        console.error('Error preparing image data:', error);
-        // Handle error (e.g., show an error message to the user)
+        console.error("Error preparing image data:", error);     
       }
     }
   };
-  
+
+  const handleCancel = () => {
+    setSelectedImage(null);
+    setPreviewImage(null);
+    setTransformState({
+      scale: 1,
+      positionX: 0,
+      positionY: 0,
+    });
+  };
+
   const prepareImageData = (): Promise<string> => {
     return new Promise((resolve, reject) => {
       const { scale, positionX, positionY } = transformState;
       const isZoomed = scale !== 1 || positionX !== 0 || positionY !== 0;
-  
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
       if (!ctx) {
-        reject(new Error('Unable to create canvas context'));
+        reject(new Error("Unable to create canvas context"));
         return;
       }
-  
+
       const img = document.createElement("img");
       img.onload = () => {
         if (isZoomed) {
-          // Set canvas size to the visible area
-          canvas.width = 600; // match the width of your TransformWrapper
-          canvas.height = 400; // match the height of your TransformWrapper
-  
-          // Calculate the visible area
+          canvas.width = 600;
+          canvas.height = 400;
+
           const visibleWidth = canvas.width / scale;
           const visibleHeight = canvas.height / scale;
-          const sourceX = (-positionX / scale) + (img.width - visibleWidth) / 2;
-          const sourceY = (-positionY / scale) + (img.height - visibleHeight) / 2;
-  
-          // Draw the visible part of the image on the canvas
+          const sourceX = -positionX / scale + (img.width - visibleWidth) / 2;
+          const sourceY = -positionY / scale + (img.height - visibleHeight) / 2;
+
           ctx.drawImage(
             img,
-            sourceX, sourceY, visibleWidth, visibleHeight,
-            0, 0, canvas.width, canvas.height
+            sourceX,
+            sourceY,
+            visibleWidth,
+            visibleHeight,
+            0,
+            0,
+            canvas.width,
+            canvas.height
           );
         } else {
-          // If not zoomed, use the full image
           canvas.width = img.width;
           canvas.height = img.height;
           ctx.drawImage(img, 0, 0);
         }
-  
-        // Convert canvas to data URL
-        const imageDataUrl = canvas.toDataURL('image/png');
+
+        const imageDataUrl = canvas.toDataURL("image/png");
         resolve(imageDataUrl);
       };
-  
+
       img.onerror = () => {
-        reject(new Error('Failed to load image'));
+        reject(new Error("Failed to load image"));
       };
-  
-      img.src = selectedImage || '';
+
+      img.src = selectedImage || "";
     });
   };
 
@@ -251,22 +250,24 @@ const ReactZoomPanPinch = ({ onBack }: ReactZoomPanPinchProps) => {
           </Button>
         )}
 
-        <Flex>
+        <Flex gap="6px" alignItems="center">
           <Button
             onClick={handleSubmit}
             colorScheme="teal"
             loadingText="Saving..."
-            isDisabled={!selectedImage}
-            mr={2}
+            isDisabled={!selectedImage}            
           >
             Save changes
           </Button>
           <Button
-            onClick={ handlePreview}
-            colorScheme={"blue"}
+            onClick={handlePreview}
+            colorScheme="blue"
             isDisabled={!selectedImage}
           >
             Preview
+          </Button>
+          <Button onClick={handleCancel} colorScheme="red" isDisabled={!selectedImage}>
+            Cancel
           </Button>
         </Flex>
       </VStack>

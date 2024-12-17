@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   Box,
   Heading,
@@ -63,6 +63,13 @@ const ReactCropper = ({ onBack }: ReactCropperProps) => {
       onPreviewOpen();
     }
   };
+
+  const handleCancel = useCallback(() => {
+    setUploadedImage(null);
+    setCroppedImage(null);
+    setZoom(0);
+    setIsCropped(false);
+  }, []);
 
   const handleSave = () => {
     if (cropperRef.current?.cropper) {
@@ -140,7 +147,7 @@ const ReactCropper = ({ onBack }: ReactCropperProps) => {
               zoomable={true}
               zoomOnTouch={false}
               zoomOnWheel={false}
-              crop={handleCropChange}
+              crop={handleCropChange}              
             />
             <HStack mt={4} justifyContent="center">
               <Button
@@ -153,8 +160,11 @@ const ReactCropper = ({ onBack }: ReactCropperProps) => {
               <Button onClick={handleSave} colorScheme="green">
                 Save
               </Button>
-              <Button onClick={handleReset} colorScheme="red">
+              <Button onClick={handleReset} colorScheme="gray">
                 Reset
+              </Button>
+              <Button onClick={handleCancel} colorScheme="red">
+                Cancel
               </Button>
             </HStack>
             <HStack mt={4} justifyContent="center" width="100%">
@@ -204,11 +214,7 @@ const ReactCropper = ({ onBack }: ReactCropperProps) => {
           <ModalCloseButton />
           <ModalBody>
             {croppedImage && (
-              <Image
-                src={croppedImage}
-                alt="Cropped image preview"
-                
-              />
+              <Image src={croppedImage} alt="Cropped image preview" />
             )}
           </ModalBody>
         </ModalContent>

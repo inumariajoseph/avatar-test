@@ -267,6 +267,15 @@ const ReactMediumImageZoom = ({ onBack }: ReactMediumImageZoomProps) => {
     }
     return new Blob([ab], {type: mimeString});
   }
+
+  const handleCancel = useCallback(() => {
+    setImgSrc("");
+    setCrop(undefined);
+    setCompletedCrop(undefined);
+    setScale(1);
+    setRotate(0);
+    setCroppedImageUrl("");
+  }, []);
  
   return (
     <Box minHeight="100vh" padding={4}>
@@ -342,14 +351,13 @@ const ReactMediumImageZoom = ({ onBack }: ReactMediumImageZoomProps) => {
                 <SliderThumb />
               </Slider>
             </Flex>
-            <Flex>
-              <Button onClick={handleReset} colorScheme="gray" mr={2}>
+            <Flex alignItems="center" gap="6px">
+              <Button onClick={handleReset} colorScheme="gray" >
                 Reset
               </Button>
               <Button
                 onClick={handlePreviewClick}
-                colorScheme="blue"
-                mr={2}
+                colorScheme="blue"              
                 isDisabled={!isValidCrop()}
               >
                 Preview Crop
@@ -357,6 +365,10 @@ const ReactMediumImageZoom = ({ onBack }: ReactMediumImageZoomProps) => {
               <Button onClick={handleSave} colorScheme="green">
                 Save Crop
               </Button>
+
+              <Button onClick={handleCancel} colorScheme="red">
+              Cancel
+            </Button>
             </Flex>
           </>
         ) : (
